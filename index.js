@@ -1,9 +1,16 @@
+
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+
+const fs = require('fs');
+const path = require('path');
+
 
 const client = new Client({
     authStrategy: new LocalAuth()
 });
+
+
 
 client.on('qr', qr => {
     console.log('Escanea este código QR con tu WhatsApp:');
@@ -17,9 +24,14 @@ client.on('ready', () => {
 // Estado de cada usuario
 const usuarios = {};
 
+
+
 // Funciones de menú
 function mostrarMenuPrincipal() {
-    return `🏫 *Instituto Técnico Tecnológico Simón Bolívar*
+    return `¡Hola! 👋 Bienvenido al *Instituto Técnico Tecnológico Simón Bolívar* 🏫
+
+Estoy aquí para ayudarte con cualquier duda que tengas sobre nuestras carreras o inscripciones.  
+
 📍 Sede: La Paz
 📆 Inicio de clases: Febrero 2025
 📢 Inscripciones abiertas
@@ -28,17 +40,45 @@ function mostrarMenuPrincipal() {
 1️⃣ Ver carreras
 2️⃣ Requisitos de inscripción
 3️⃣ Ver ubicación y teléfonos
-4️⃣ Contactar con secretaria`;
+4️⃣ Contactar con secretaria;
+
+
+💬 *Solo responde con el número de la opción* 👆`;
+
+}
+
+// Función para registrar la actividad de un usuario
+function registrarActividad(chatId, mensaje) {
+    const fecha = new Date();
+    const fechaStr = fecha.toISOString().split('T')[0]; // "2025-07-21"
+    const horaStr = fecha.toTimeString().split(' ')[0]; // "14:23:01"
+    const nombreArchivo = path.join(__dirname, 'logs', `${fechaStr}.txt`);
+
+    const linea = `[${horaStr}] ${chatId}: ${mensaje}\n`;
+
+    // Crea la carpeta "logs" si no existe
+    if (!fs.existsSync(path.join(__dirname, 'logs'))) {
+        fs.mkdirSync(path.join(__dirname, 'logs'));
+    }
+
+    // Agrega el texto al archivo del día
+    fs.appendFileSync(nombreArchivo, linea);
 }
 
 function mostrarMenuCarreras() {
-    return `📚 *Carreras disponibles:*
+    return ` *🎓 *Carreras Técnicas Disponibles en el Instituto Técnico Simon Bolivar*
+
+
+✨ Descubre tu futuro profesional con nosotros. Elige una de nuestras carreras y comienza a construir tus sueños:
 
 1️⃣ Mecánica Automotriz  
 2️⃣ Autotrónica  
 3️⃣ Maquinaria Pesada
 
-Escribe el número para ver detalles o "menú" para volver al inicio.`;
+💬 *Responde solo con el número de la opción que te interesa (1, 2 o 3)*  
+
+escribe *"menú"* para volver al inicio.
+  `;
 }
 
 // --- Detalles y Pensum: MECÁNICA AUTOMOTRIZ ---
@@ -47,13 +87,19 @@ function mostrarDetalleMecanica() {
 
 Formación práctica en diagnóstico, mantenimiento y reparación de vehículos con tecnología actual.
 
-🎓 Técnico Superior | 3 años (6 semestres) | Presencial  
-🕘 Horarios: 08:00-12:30 / 14:00-18:30 / 18:30-22:00  
+🎓Técnico Superior  3 años (6 semestres) Presencial 
+
+🕘Horarios
+ 08:00-12:30  
+ 14:00-18:30 
+ 18:30-22:00 
+
 📍 Sede: La Paz
 
 ¿Qué deseas hacer?  
+
 1️⃣ Ver pensum  
-2️⃣ Inscribirme  
+2️⃣ Preinscripcion  
 3️⃣ Volver al menú de carreras  
 4️⃣ Volver al menú principal`;
 }
@@ -120,13 +166,19 @@ function mostrarDetalleAutotronica() {
 
 Especialización en electrónica y sistemas computarizados de vehículos modernos, con enfoque en diagnóstico y reparación avanzada.
 
-🎓 Técnico Superior | 3 años (6 semestres) | Presencial  
-🕘 Horarios: 08:00-12:30 / 14:00-18:30 / 18:30-22:00  
+🎓Técnico Superior  3 años (6 semestres) Presencial 
+
+🕘Horarios
+ 08:00-12:30  
+ 14:00-18:30 
+ 18:30-22:00 
+
 📍 Sede: La Paz
 
-¿Qué deseas hacer?  
+¿Qué deseas hacer? 
+
 1️⃣ Ver pensum  
-2️⃣ Inscribirme  
+2️⃣ Preinscripcion   
 3️⃣ Volver al menú de carreras  
 4️⃣ Volver al menú principal`;
 }
@@ -193,13 +245,19 @@ function mostrarDetalleMaquinaria() {
 
 Formación técnica en operación, mantenimiento y reparación de maquinaria para construcción, minería y obras viales.
 
-🎓 Técnico Superior | 3 años (6 semestres) | Presencial  
-🕘 Horarios: 08:00-12:30 / 14:00-18:30 / 18:30-22:00  
+🎓Técnico Superior  3 años (6 semestres) Presencial 
+
+🕘Horarios
+ 08:00-12:30  
+ 14:00-18:30 
+ 18:30-22:00 
+
 📍 Sede: La Paz
 
-¿Qué deseas hacer?  
+¿Qué deseas hacer? 
+
 1️⃣ Ver pensum  
-2️⃣ Inscribirme  
+2️⃣ Preinscripcion   
 3️⃣ Volver al menú de carreras  
 4️⃣ Volver al menú principal`;
 }
@@ -261,8 +319,11 @@ function mostrarPensumMaquinaria() {
 
 // --- Lógica de mensajes ---
 client.on('message', async msg => {
-    const chatId = msg.from;
+   const chatId = msg.from;
+
     const texto = msg.body.trim().toLowerCase();
+    
+        registrarActividad(chatId, msg.body.trim());
 
     if (!usuarios[chatId]) {
         usuarios[chatId] = { estado: 'inicio', datosPreinscripcion: {} };
@@ -287,14 +348,19 @@ client.on('message', async msg => {
 4. Seguro contra accidentes
 
 Escribe "menú" para volver al inicio.`, 'inicio');
-            else if (texto === '3') await enviarMensaje(`📍 *Ubicación y teléfonos:*
-Av. Sucre N.º 1423, La Paz, Bolivia  
-Av. Sucre Esq. Loayza N.º 1402, La Paz, Bolivia
+            else if (texto === '3') await enviarMensaje(`
+
+ 
+🗺️ *Ubicación en Google Maps:*  
+
+(https://maps.app.goo.gl/f2eu34s5ocjqG8RM6)
+¡Te esperamos! 🎓
 
 ☎️ Secretaría: 2281885 / 76797193
 
 Escribe "menú" para volver al inicio.`, 'inicio');
             else if (texto === '4') await enviarMensaje(`☎️ Puedes contactar a la secretaria en horarios:
+
 🕘 8:30 a.m - 12:00 p.m  
 🕓 4:00 p.m - 8:30 p.m
 
@@ -372,7 +438,8 @@ Por favor, envíanos los siguientes datos:
 2. Número de celular  
 3. Turno (mañana, tarde o noche)
 
-📩 Escribe todo en un solo mensaje.`, 'preinscripcion');
+📩 Escribe todo en un solo mensaje.`, 'preinscripcion',
+ `🕒 Una vez recibamos tus datos, uno de nuestros asesores se pondrá en contacto contigo lo antes posible.* ¡Gracias por tu interés en formar parte del Instituto Técnico Simon Bolivar! `);
             } else if (texto === '3') await enviarMensaje(mostrarMenuCarreras(), 'menuCarreras');
             else if (texto === '4') await enviarMensaje(mostrarMenuPrincipal(), 'inicio');
             else await enviarMensaje(`❌ Opción inválida. Intenta de nuevo:\n` + mostrarDetalleMaquinaria(), 'detalleMaquinaria');
